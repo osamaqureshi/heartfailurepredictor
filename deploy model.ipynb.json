@@ -1,0 +1,813 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Import libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import math\n",
+    "import scipy.stats as stats\n",
+    "import json\n",
+    "\n",
+    "% matplotlib inline\n",
+    "import matplotlib.pyplot as plt\n",
+    "from mpl_toolkits.mplot3d import Axes3D"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Extract, Transform, Load (ETL)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>AVGHEARTBEATSPERMIN</th>\n",
+       "      <th>PALPITATIONSPERDAY</th>\n",
+       "      <th>CHOLESTEROL</th>\n",
+       "      <th>BMI</th>\n",
+       "      <th>HEARTFAILURE</th>\n",
+       "      <th>AGE</th>\n",
+       "      <th>SEX</th>\n",
+       "      <th>FAMILYHISTORY</th>\n",
+       "      <th>SMOKERLAST5YRS</th>\n",
+       "      <th>EXERCISEMINPERWEEK</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>93</td>\n",
+       "      <td>22</td>\n",
+       "      <td>163</td>\n",
+       "      <td>25</td>\n",
+       "      <td>N</td>\n",
+       "      <td>49</td>\n",
+       "      <td>F</td>\n",
+       "      <td>N</td>\n",
+       "      <td>N</td>\n",
+       "      <td>110</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>108</td>\n",
+       "      <td>22</td>\n",
+       "      <td>181</td>\n",
+       "      <td>24</td>\n",
+       "      <td>N</td>\n",
+       "      <td>32</td>\n",
+       "      <td>F</td>\n",
+       "      <td>N</td>\n",
+       "      <td>N</td>\n",
+       "      <td>192</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>86</td>\n",
+       "      <td>0</td>\n",
+       "      <td>239</td>\n",
+       "      <td>20</td>\n",
+       "      <td>N</td>\n",
+       "      <td>60</td>\n",
+       "      <td>F</td>\n",
+       "      <td>N</td>\n",
+       "      <td>N</td>\n",
+       "      <td>121</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>80</td>\n",
+       "      <td>36</td>\n",
+       "      <td>164</td>\n",
+       "      <td>31</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>45</td>\n",
+       "      <td>F</td>\n",
+       "      <td>Y</td>\n",
+       "      <td>N</td>\n",
+       "      <td>141</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>66</td>\n",
+       "      <td>36</td>\n",
+       "      <td>185</td>\n",
+       "      <td>23</td>\n",
+       "      <td>N</td>\n",
+       "      <td>39</td>\n",
+       "      <td>F</td>\n",
+       "      <td>N</td>\n",
+       "      <td>N</td>\n",
+       "      <td>63</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   AVGHEARTBEATSPERMIN  PALPITATIONSPERDAY  CHOLESTEROL  BMI HEARTFAILURE  \\\n",
+       "0                   93                  22          163   25            N   \n",
+       "1                  108                  22          181   24            N   \n",
+       "2                   86                   0          239   20            N   \n",
+       "3                   80                  36          164   31            Y   \n",
+       "4                   66                  36          185   23            N   \n",
+       "\n",
+       "   AGE SEX FAMILYHISTORY SMOKERLAST5YRS  EXERCISEMINPERWEEK  \n",
+       "0   49   F             N              N                 110  \n",
+       "1   32   F             N              N                 192  \n",
+       "2   60   F             N              N                 121  \n",
+       "3   45   F             Y              N                 141  \n",
+       "4   39   F             N              N                  63  "
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import sys\n",
+    "import types\n",
+    "from botocore.client import Config\n",
+    "import ibm_boto3\n",
+    "\n",
+    "def __iter__(self): return 0\n",
+    "\n",
+    "# @hidden_cell\n",
+    "# The following code accesses a file in your IBM Cloud Object Storage. It includes your credentials.\n",
+    "# You might want to remove those credentials before you share your notebook.\n",
+    "client_033720b2fef74cf5b63a9bdb7bed3903 = ibm_boto3.client(service_name='s3',\n",
+    "    ibm_api_key_id='E2GkkEi5Z8AjA94-WB0U0GhywQe675-Uh0-SzTz-iuk4',\n",
+    "    ibm_auth_endpoint=\"https://iam.bluemix.net/oidc/token\",\n",
+    "    config=Config(signature_version='oauth'),\n",
+    "    endpoint_url='https://s3-api.us-geo.objectstorage.service.networklayer.com')\n",
+    "\n",
+    "body = client_033720b2fef74cf5b63a9bdb7bed3903.get_object(Bucket='default-donotdelete-pr-6dlbyypvskdhdj',Key='patientdataV6.csv')['Body']\n",
+    "# add missing __iter__ method, so pandas accepts body as file-like object\n",
+    "if not hasattr(body, \"__iter__\"): body.__iter__ = types.MethodType( __iter__, body )\n",
+    "\n",
+    "df = pd.read_csv(body)\n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# df = df.values"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Feature Creation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting sklearn-pandas\n",
+      "  Downloading https://files.pythonhosted.org/packages/1f/48/4e1461d828baf41d609efaa720d20090ac6ec346b5daad3c88e243e2207e/sklearn_pandas-1.8.0-py2.py3-none-any.whl\n",
+      "Requirement not upgraded as not directly required: scikit-learn>=0.15.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: pandas>=0.11.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: numpy>=1.6.1 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: scipy>=0.14 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: python-dateutil>=2 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from pandas>=0.11.0->sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: pytz>=2011k in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from pandas>=0.11.0->sklearn-pandas)\n",
+      "Requirement not upgraded as not directly required: six>=1.5 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from python-dateutil>=2->pandas>=0.11.0->sklearn-pandas)\n",
+      "Installing collected packages: sklearn-pandas\n",
+      "Successfully installed sklearn-pandas-1.8.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install sklearn-pandas"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn import preprocessing\n",
+    "from sklearn import svm, metrics\n",
+    "from sklearn.ensemble import GradientBoostingClassifier\n",
+    "from sklearn.preprocessing import LabelEncoder, MinMaxScaler\n",
+    "from sklearn_pandas import DataFrameMapper\n",
+    "from sklearn.model_selection import train_test_split"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Split into training and test datasets"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "train, test = train_test_split(df, test_size=0.2)\n",
+    "test, scoring = train_test_split(test, test_size=0.05)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "train_labels = LabelEncoder().fit_transform(train['HEARTFAILURE'])\n",
+    "test_labels = LabelEncoder().fit_transform(test['HEARTFAILURE'])\n",
+    "scoring_labels = LabelEncoder().fit_transform(scoring['HEARTFAILURE'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "train = train.drop('HEARTFAILURE', axis = 1)\n",
+    "test = test.drop('HEARTFAILURE', axis = 1)\n",
+    "scoring = scoring.drop('HEARTFAILURE', axis = 1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Define mapper"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mapper = DataFrameMapper([\n",
+    "    (['AVGHEARTBEATSPERMIN'], MinMaxScaler(feature_range=(0, 1))),\n",
+    "    (['PALPITATIONSPERDAY'], MinMaxScaler(feature_range=(0, 1))),\n",
+    "    (['CHOLESTEROL'], MinMaxScaler(feature_range=(0, 1))),\n",
+    "    (['BMI'], MinMaxScaler(feature_range=(0, 1))),\n",
+    "    (['AGE'], MinMaxScaler(feature_range=(0, 1))),\n",
+    "    (['SEX'], LabelEncoder()),\n",
+    "    (['FAMILYHISTORY'], LabelEncoder()),\n",
+    "    (['SMOKERLAST5YRS'], LabelEncoder()),\n",
+    "    (['EXERCISEMINPERWEEK'], MinMaxScaler(feature_range=(0, 1)))])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Model Definition"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "gbt = GradientBoostingClassifier()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pipeline = Pipeline(steps=[('preprocessor', mapper),('classifier', gbt)])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/envs/DSX-Python35/lib/python3.5/site-packages/sklearn/utils/validation.py:475: DataConversionWarning: Data with input dtype int64 was converted to float64 by MinMaxScaler.\n",
+      "  warnings.warn(msg, DataConversionWarning)\n",
+      "/opt/conda/envs/DSX-Python35/lib/python3.5/site-packages/sklearn/preprocessing/label.py:111: DataConversionWarning: A column-vector y was passed when a 1d array was expected. Please change the shape of y to (n_samples, ), for example using ravel().\n",
+      "  y = column_or_1d(y, warn=True)\n"
+     ]
+    }
+   ],
+   "source": [
+    "model = pipeline.fit(train, train_labels)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Model Training"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/envs/DSX-Python35/lib/python3.5/site-packages/sklearn/preprocessing/label.py:128: DataConversionWarning: A column-vector y was passed when a 1d array was expected. Please change the shape of y to (n_samples, ), for example using ravel().\n",
+      "  y = column_or_1d(y, warn=True)\n"
+     ]
+    }
+   ],
+   "source": [
+    "predicted = model.predict(test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Model Evaluation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Evaluation report: \n",
+      "\n",
+      "             precision    recall  f1-score   support\n",
+      "\n",
+      "          0       0.90      0.96      0.93      1729\n",
+      "          1       0.70      0.45      0.55       323\n",
+      "\n",
+      "avg / total       0.87      0.88      0.87      2052\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Evaluation report: \\n\\n%s\" % metrics.classification_report(test_labels, predicted))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Model Deployment"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting watson-machine-learning-client\n",
+      "  Downloading https://files.pythonhosted.org/packages/da/72/89a28afc8b80f5c9ab9116cba343bce7b465c10515531a53b0221f60698a/watson_machine_learning_client-1.0.347-py3-none-any.whl (935kB)\n",
+      "\u001b[K    100% |████████████████████████████████| 942kB 1.0MB/s eta 0:00:01\n",
+      "\u001b[?25hRequirement not upgraded as not directly required: ibm-cos-sdk in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: tqdm in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: requests in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: certifi in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: pandas in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: tabulate in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: urllib3 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: lomond in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: ibm-cos-sdk-s3transfer==2.*,>=2.0.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from ibm-cos-sdk->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: ibm-cos-sdk-core==2.*,>=2.0.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from ibm-cos-sdk->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: chardet<3.1.0,>=3.0.2 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from requests->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: idna<2.7,>=2.5 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from requests->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: python-dateutil>=2 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from pandas->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: pytz>=2011k in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from pandas->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: numpy>=1.9.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from pandas->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: six>=1.10.0 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from lomond->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: docutils>=0.10 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from ibm-cos-sdk-core==2.*,>=2.0.0->ibm-cos-sdk->watson-machine-learning-client)\n",
+      "Requirement not upgraded as not directly required: jmespath<1.0.0,>=0.7.1 in /opt/conda/envs/DSX-Python35/lib/python3.5/site-packages (from ibm-cos-sdk-core==2.*,>=2.0.0->ibm-cos-sdk->watson-machine-learning-client)\n",
+      "Installing collected packages: watson-machine-learning-client\n",
+      "  Found existing installation: watson-machine-learning-client 1.0.346\n",
+      "    Uninstalling watson-machine-learning-client-1.0.346:\n",
+      "      Successfully uninstalled watson-machine-learning-client-1.0.346\n",
+      "Successfully installed watson-machine-learning-client-1.0.347\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install watson-machine-learning-client --upgrade"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/envs/DSX-Python35/lib/python3.5/site-packages/sklearn/cross_validation.py:41: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.\n",
+      "  \"This module will be removed in 0.20.\", DeprecationWarning)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from watson_machine_learning_client import WatsonMachineLearningAPIClient"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "credentials = {\n",
+    "  \"instance_id\": \"afb57f7c-18a2-4f69-b47d-18fa821a32a1\",\n",
+    "  \"password\": \"e3d0a7bc-1f89-4b02-b244-c67e2d3616fa\",\n",
+    "  \"url\": \"https://us-south.ml.cloud.ibm.com\",\n",
+    "  \"username\": \"0e05bd73-61e4-445a-b44e-9172cd59b77a\",\n",
+    "  \"apikey\": \"ft5SoPEmnr1a6X57L3WqB_3UBi-fbgTWNnISvCk5cwPI\",\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "client = WatsonMachineLearningAPIClient(credentials)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Publish model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_props = {client.repository.ModelMetaNames.AUTHOR_NAME: \"OQ\", \n",
+    "               client.repository.ModelMetaNames.NAME: \"Heart Failure predictor\"}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "published_model = client.repository.store_model(model=model, meta_props=model_props, \\\n",
+    "                                                training_data=train, training_target=train_labels)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Model details"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "published_model_uid = client.repository.get_model_uid(published_model)\n",
+    "model_details = client.repository.get_details(published_model_uid)\n",
+    "\n",
+    "# print(json.dumps(model_details, indent=2))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 79,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "------------------------------------  -----------------------  ------------------------  -----------------\n",
+      "GUID                                  NAME                     CREATED                   FRAMEWORK\n",
+      "e43e5251-afe7-4246-b45b-3a2397eb13cf  Heart Failure predictor  2018-12-12T17:12:37.493Z  scikit-learn-0.19\n",
+      "------------------------------------  -----------------------  ------------------------  -----------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "models_details = client.repository.list_models()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Create online deployment"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 80,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "\n",
+      "#######################################################################################\n",
+      "\n",
+      "Synchronous deployment creation for uid: 'e43e5251-afe7-4246-b45b-3a2397eb13cf' started\n",
+      "\n",
+      "#######################################################################################\n",
+      "\n",
+      "\n",
+      "INITIALIZING\n",
+      "DEPLOY_SUCCESS\n",
+      "\n",
+      "\n",
+      "------------------------------------------------------------------------------------------------\n",
+      "Successfully finished deployment creation, deployment_uid='6cc3c1c6-94e3-47e4-b163-fd1296b1f714'\n",
+      "------------------------------------------------------------------------------------------------\n",
+      "\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "created_deployment = client.deployments.create(published_model_uid, \"Heart Failure predictor\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "https://us-south.ml.cloud.ibm.com/v3/wml_instances/afb57f7c-18a2-4f69-b47d-18fa821a32a1/deployments/6cc3c1c6-94e3-47e4-b163-fd1296b1f714/online\n"
+     ]
+    }
+   ],
+   "source": [
+    "scoring_endpoint = client.deployments.get_scoring_url(created_deployment)\n",
+    "\n",
+    "print(scoring_endpoint)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Load Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 82,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# loaded_model = client.repository.load(published_model_uid)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 109,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "scoring_payload = {\"values\": [[103, 40, 197, 30, 38, 'F', 'Y', 'N', 208], [98, 45, 180, 22, 68, 'M', 'Y', 'N', 34]]}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 110,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "predictions = client.deployments.score(scoring_endpoint, scoring_payload)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 111,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{\n",
+      "  \"values\": [\n",
+      "    [\n",
+      "      0,\n",
+      "      [\n",
+      "        0.9114353435976077,\n",
+      "        0.08856465640239232\n",
+      "      ]\n",
+      "    ],\n",
+      "    [\n",
+      "      1,\n",
+      "      [\n",
+      "        0.13840699400152823,\n",
+      "        0.8615930059984718\n",
+      "      ]\n",
+      "    ]\n",
+      "  ],\n",
+      "  \"fields\": [\n",
+      "    \"prediction\",\n",
+      "    \"probability\"\n",
+      "  ]\n",
+      "}\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(json.dumps(predictions, indent=2))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 112,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[103 40 197 30 38 'F' 'Y' 'N' 208] 0\n",
+      "[98 45 180 22 68 'M' 'Y' 'N' 34] 1\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(scoring.iloc[0].values, scoring_labels[0])\n",
+    "print(scoring.iloc[5].values, scoring_labels[5])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Delete deployment and model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 77,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# client.deployments.delete(client.deployments.get_uid(created_deployment))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 78,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "----  ----  ----  -----  -------  ---------  -------------\n",
+      "GUID  NAME  TYPE  STATE  CREATED  FRAMEWORK  ARTIFACT TYPE\n",
+      "----  ----  ----  -----  -------  ---------  -------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "client.deployments.list()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# client.repository.delete(published_model_uid)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "------------------------------------  -----------------------  ------------------------  -----------------\n",
+      "GUID                                  NAME                     CREATED                   FRAMEWORK\n",
+      "e43e5251-afe7-4246-b45b-3a2397eb13cf  Heart Failure predictor  2018-12-12T17:12:37.493Z  scikit-learn-0.19\n",
+      "------------------------------------  -----------------------  ------------------------  -----------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "client.repository.list_models()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3.5",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.5.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
