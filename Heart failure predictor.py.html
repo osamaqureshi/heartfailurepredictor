@@ -1,0 +1,583 @@
+
+# coding: utf-8
+
+# # Import libraries
+
+# In[50]:
+
+
+import pandas as pd
+import numpy as np
+import math
+import scipy.stats as stats
+
+get_ipython().magic(u'matplotlib inline')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
+# # Import data
+
+# In[3]:
+
+
+import sys
+import types
+from botocore.client import Config
+import ibm_boto3
+
+def __iter__(self): return 0
+
+# @hidden_cell
+# The following code accesses a file in your IBM Cloud Object Storage. It includes your credentials.
+# You might want to remove those credentials before you share your notebook.
+client_033720b2fef74cf5b63a9bdb7bed3903 = ibm_boto3.client(service_name='s3',
+    ibm_api_key_id='E2GkkEi5Z8AjA94-WB0U0GhywQe675-Uh0-SzTz-iuk4',
+    ibm_auth_endpoint="https://iam.bluemix.net/oidc/token",
+    config=Config(signature_version='oauth'),
+    endpoint_url='https://s3-api.us-geo.objectstorage.service.networklayer.com')
+
+body = client_033720b2fef74cf5b63a9bdb7bed3903.get_object(Bucket='default-donotdelete-pr-6dlbyypvskdhdj',Key='patientdataV6.csv')['Body']
+# add missing __iter__ method, so pandas accepts body as file-like object
+if not hasattr(body, "__iter__"): body.__iter__ = types.MethodType( __iter__, body )
+
+df = pd.read_csv(body)
+df.head()
+
+
+# # Initial Data Exploration
+
+# In[4]:
+
+
+headers = list(df)  # column headers
+
+
+# In[5]:
+
+
+df[headers[4]] = [1 if x == 'Y' else 0 for x in df[headers[4]]]
+df[headers[6]] = [1 if x == 'M' else 0 for x in df[headers[6]]]
+df[headers[7]] = [1 if x == 'Y' else 0 for x in df[headers[7]]]
+df[headers[8]] = [1 if x == 'Y' else 0 for x in df[headers[8]]]
+
+
+# 1. Average heartbeat per minute
+
+# In[6]:
+
+
+avg = np.mean(df[headers[0]])
+std = np.std(df[headers[0]])
+skew = stats.skew(df[headers[0]])
+kurtosis = stats.kurtosis(df[headers[0]])
+
+print("Average heartbeat per minute")
+print("[Min,Max]:", [min(df[headers[0]]), max((df[headers[0]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+# plt.subplot(1,2,1)
+plt.boxplot(df[headers[0]])
+plt.show()
+
+# plt.subplot(1,2,2)
+plt.hist(df[headers[0]])
+plt.show()
+
+
+# 2. Palpitations per week
+
+# In[7]:
+
+
+avg = np.mean(df[headers[1]])
+std = np.std(df[headers[1]])
+skew = stats.skew(df[headers[1]])
+kurtosis = stats.kurtosis(df[headers[1]])
+
+print("Palpitations per week")
+print("[Min,Max]:", [min(df[headers[1]]), max((df[headers[1]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+plt.boxplot(df[headers[1]])
+plt.show()
+
+plt.hist(df[headers[1]])
+plt.show()
+
+
+# 3. Cholesterol
+
+# In[8]:
+
+
+avg = np.mean(df[headers[2]])
+std = np.std(df[headers[2]])
+skew = stats.skew(df[headers[2]])
+kurtosis = stats.kurtosis(df[headers[2]])
+
+print("Cholesterol")
+print("[Min,Max]:", [min(df[headers[2]]), max((df[headers[2]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+plt.boxplot(df[headers[2]])
+plt.show()
+
+plt.hist(df[headers[2]])
+plt.show()
+
+
+# 4. BMI
+
+# In[9]:
+
+
+avg = np.mean(df[headers[3]])
+std = np.std(df[headers[3]])
+skew = stats.skew(df[headers[3]])
+kurtosis = stats.kurtosis(df[headers[3]])
+
+print("BMI")
+print("[Min,Max]:", [min(df[headers[3]]), max((df[headers[3]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+plt.boxplot(df[headers[3]])
+plt.show()
+
+plt.hist(df[headers[3]])
+plt.show()
+
+
+# 5. Age
+
+# In[10]:
+
+
+avg = np.mean(df[headers[5]])
+std = np.std(df[headers[5]])
+skew = stats.skew(df[headers[5]])
+kurtosis = stats.kurtosis(df[headers[5]])
+
+print("Age")
+print("[Min,Max]:", [min(df[headers[5]]), max((df[headers[5]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+plt.boxplot(df[headers[5]])
+plt.show()
+
+plt.hist(df[headers[5]])
+plt.show()
+
+
+# 6. Sex
+
+# In[11]:
+
+
+count = df[headers[6]].value_counts()
+
+print("Sex")
+print("Male: ", count[0], " Female: ", count[1])
+
+plt.hist(df[headers[6]])
+plt.show()
+
+
+# 7. Family History
+
+# In[12]:
+
+
+count = df[headers[7]].value_counts()
+
+print("Family History")
+print("Yes: ", count[1], " No: ", count[0])
+
+plt.hist(df[headers[7]])
+plt.show()
+
+
+# 8. Smoker last 5 year
+
+# In[13]:
+
+
+count = df[headers[8]].value_counts()
+
+print("Smoker last 5 year")
+print("Smoker: ", count[1], " Non-smoker: ", count[0])
+
+plt.hist(df[headers[8]])
+plt.show()
+
+
+# 9. Exercise per minute per week
+
+# In[14]:
+
+
+avg = np.mean(df[headers[9]])
+std = np.std(df[headers[9]])
+skew = stats.skew(df[headers[9]])
+kurtosis = stats.kurtosis(df[headers[9]])
+
+print("Exercise per minute per week")
+print("[Min,Max]:", [min(df[headers[9]]), max((df[headers[9]]))], " Mean: ", avg, " Standard dev: ", std, " Skew: ", skew, " Kurtosis: ", kurtosis)
+
+plt.boxplot(df[headers[9]])
+plt.show()
+
+plt.hist(df[headers[9]])
+plt.show()
+
+
+# 10. Heart Failure
+
+# In[15]:
+
+
+count = df[headers[4]].value_counts()
+
+print("Heart failure")
+print("Yes: ", count[1], " No: ", count[0])
+
+plt.hist(df[headers[4]])
+plt.show()
+
+
+# # Extract, Transform, Load (ETL)
+
+# # Correlation matrix
+
+# In[16]:
+
+
+labels = df[headers[4]].values
+df = df.drop('HEARTFAILURE', axis=1)
+df['label'] = labels
+df.head()
+
+
+# In[17]:
+
+
+from pyspark.sql import SQLContext
+from pyspark.mllib.stat import Statistics
+
+context = SQLContext(sc)
+
+df_sql = context.createDataFrame(df)
+df_spark = df_sql.rdd.map(lambda row: [row.AVGHEARTBEATSPERMIN, row.PALPITATIONSPERDAY, row.CHOLESTEROL, row.BMI, row.AGE, row.SEX, row.FAMILYHISTORY, row.SMOKERLAST5YRS, row.EXERCISEMINPERWEEK, row.label])
+corr = Statistics.corr(df_spark)
+
+np.set_printoptions(formatter={'float_kind':'{:10f}'.format}, precision=1, linewidth = 200)
+print(headers)
+corr
+
+
+# # PCA
+
+# In[53]:
+
+
+from pyspark.ml.feature import PCA, VectorAssembler
+
+df_sql = context.createDataFrame(df.drop('label', axis=1))
+
+assembler = VectorAssembler(inputCols = df_sql.columns, outputCol = 'vector_features')
+
+
+# In[100]:
+
+
+features = assembler.transform(df_sql)
+
+pca = PCA(k=3, inputCol = 'vector_features', outputCol = 'pcaFeatures')
+model = pca.fit(features)
+pca = model.transform(features).select("pcaFeatures")
+
+pca_sample = pca.rdd.sample(False, 0.025)
+
+x = pca_sample.map(lambda r: r.pcaFeatures).map(lambda r: r[0]).collect()
+y = pca_sample.map(lambda r: r.pcaFeatures).map(lambda r: r[1]).collect()
+z = pca_sample.map(lambda r: r.pcaFeatures).map(lambda r: r[2]).collect()
+
+pca_sample.count()
+
+
+# In[101]:
+
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(x, y, z, c = 'r', marker = 'o')
+ax.set_xlabel('dimension 1')
+ax.set_ylabel('dimension 2')
+ax.set_zlabel('dimension 3')
+
+
+# # Feature Creation
+
+# 1. For Keras and SKlearn Models
+
+# In[22]:
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+data = df.drop('label', axis=1)
+
+scaler = MinMaxScaler(feature_range=(0, 1))
+data =  scaler.fit_transform(data)
+
+
+# In[23]:
+
+
+# create train,test,val splits
+from sklearn.cross_validation import train_test_split
+
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=42)
+test_data, val_data, test_labels, val_labels = train_test_split(test_data, test_labels, test_size=0.5, random_state=42)
+
+
+# 2. For SparkML Model
+
+# In[24]:
+
+
+from pyspark.ml.feature import MinMaxScaler
+from pyspark.ml.linalg import Vectors
+from pyspark.sql.functions import lit
+
+
+# In[25]:
+
+
+from pyspark.ml.feature import MinMaxScaler
+
+scaler = MinMaxScaler(inputCol = 'vector_features', outputCol = 'features')
+
+
+# In[26]:
+
+
+from pyspark.ml import Pipeline
+
+pipeline = Pipeline(stages=[assembler, scaler])
+
+
+# 3. For training with PCA features
+
+# In[27]:
+
+
+pca_data = pca.rdd.map(lambda row: row.pcaFeatures).collect()
+pca_data = np.array([[pca_data[i][0], pca_data[i][1], pca_data[i][2]] for i in range(len(pca_data))])
+
+
+# In[28]:
+
+
+# # create train,test,val splits
+# from sklearn.cross_validation import train_test_split
+
+# train_data, test_data, train_labels, test_labels = train_test_split(pca_data, labels, test_size=0.2, random_state=42)
+# test_data, val_data, test_labels, val_labels = train_test_split(test_data, test_labels, test_size=0.5, random_state=42)
+
+
+# # Model Definition
+
+# 1. For Keras Model
+
+# In[29]:
+
+
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout
+from keras.layers import Conv1D, MaxPooling1D, GlobalAveragePooling1D
+from keras.callbacks import Callback
+from keras import optimizers
+
+
+# In[47]:
+
+
+input_dim = 9
+epochs = 100
+batch_size = 60
+samples = 100
+
+
+# In[89]:
+
+
+model = Sequential()
+model.add(Dense(512, activation='relu', input_dim = input_dim))
+model.add(Dropout(0.25))
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.25))
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.25))
+
+model.add(Dense(1, activation='sigmoid'))
+
+optimizer = optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=None, decay=0.0)
+
+model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+# model.save('model.h5')
+model.summary()
+
+
+# In[102]:
+
+
+model.fit(train_data, train_labels, epochs = epochs, batch_size = batch_size, validation_data=(val_data, val_labels))
+
+
+# 2. For SKlearn Model
+
+# In[103]:
+
+
+from sklearn.linear_model import LogisticRegression
+
+logReg = LogisticRegression(random_state=0).fit(train_data, train_labels)
+prediction_logReg = logReg.predict(test_data)
+
+
+# In[34]:
+
+
+from sklearn import svm
+
+svm = svm.SVC().fit(train_data, train_labels)
+prediction_svm = svm.predict(test_data)
+
+
+# In[80]:
+
+
+from sklearn.ensemble import GradientBoostingClassifier
+
+gtbc = GradientBoostingClassifier().fit(train_data, train_labels)
+prediction_gbtc = gtbc.predict(test_data)
+
+
+# In[82]:
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier().fit(train_data, train_labels)
+prediction_rf = rf.predict(test_data)
+
+
+# 3. For SparkML Model
+
+# In[36]:
+
+
+df_sql = context.createDataFrame(df.drop('label', axis=1))
+
+x = pipeline.fit(df_sql).transform(df_sql).rdd.map(lambda row: row.features).collect()
+
+y = pd.DataFrame({'features':x,'label':labels})
+data_ml = context.createDataFrame(y)
+
+
+# In[37]:
+
+
+from pyspark.ml.classification import LogisticRegression
+
+lr = LogisticRegression(maxIter=100, regParam=0.3, elasticNetParam=0.8)
+prediction_lr = lr.fit(data_ml).transform(data_ml)
+
+
+# In[38]:
+
+
+from pyspark.ml.classification import GBTClassifier
+from pyspark.ml.classification import RandomForestClassifier
+
+rf = RandomForestClassifier(labelCol="label", featuresCol="features")
+prediction_rf = rf.fit(data_ml).transform(data_ml)
+
+gbt = GBTClassifier(featuresCol = 'features', labelCol = 'label', maxIter = 100)
+prediction_gbt = gbt.fit(data_ml).transform(data_ml)
+
+
+# # Model Evaluation
+
+# 1. For Keras Model
+
+# In[ ]:
+
+
+score = model.evaluate(test_data, test_labels, batch_size = batch_size)
+print "Test loss: ", score[0]
+print "Test Accuracy: ", score[1]
+
+sgd = 0.8575, 0.8472
+adagrad = 0.8618, 0.855
+rmsprop = 0.8603, 0.843
+adam = 0.8605, 0.853
+adadelta = 0.8615, 0.853
+
+training on PCA data: 
+adadelta = 83.78
+# 2. For SKLearn Model
+
+# In[83]:
+
+
+from sklearn.metrics import accuracy_score
+
+score_LogReg = accuracy_score(prediction_logReg, test_labels)
+
+score_svm = accuracy_score(prediction_svm, test_labels)
+
+score_gbtc = accuracy_score(prediction_gbtc, test_labels)
+
+score_rf = accuracy_score(prediction_rf, test_labels)
+
+
+print('Logistic Regression Accuracy', score_LogReg)
+print('SVM Accuracy', score_svm)
+print('GBT Accuracy', score_gbtc)
+print('RF Accuracy', score_rf)
+
+Accuracy:
+Logistic Regression = 0.8481481481481481
+SVM = 0.84722222222222221
+GBT = 0.85925925925925928
+RF = 0.85185185185185186
+
+Accuracy_PCA:
+Logistic Regression = 0.82870370370370372
+SVM = 0.81944444444444442
+GBT = 0.82685185185185184
+# 3. For SparkML
+
+# In[41]:
+
+
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+prediction_lr = prediction_lr.rdd.map(lambda row: row.prediction).collect()
+prediction_gbt = prediction_gbt.rdd.map(lambda row: row.prediction).collect()
+prediction_rf = prediction_rf.rdd.map(lambda row: row.prediction).collect()
+
+evaluator = BinaryClassificationEvaluator()
+
+print('Logistic Regression Accuracy', accuracy_score(prediction_lr, labels))
+
+print('GBT Accuracy', accuracy_score(prediction_gbt, labels))
+
+print('RF Accuracy', accuracy_score(prediction_rf, labels))
+
+Accuracy
+Logistic Regression = 0.83444444444444443
+GBT Accuracy =  0.8913888888888889
+RF Accuracy =  0.87240740740740741
+
+Accuracy_PCA
+Logistic Regression = 0.83444444444444443
+GBT Accuracy =  0.85203703703703704
